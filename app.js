@@ -1,4 +1,3 @@
-// 1. КОНФИГУРАЦИЯ (Только CryptoCompare)
 const API_KEY = 'a95a50822aa917e66ee9b03c4351e50baa42b187088c945539777a0685e5eca3'; 
 let allCoins = [];
 let myChart = null;
@@ -9,7 +8,6 @@ window.addEventListener('DOMContentLoaded', () => {
     fetchMarketData();
 });
 
-// 2. НАВИГАЦИЯ
 function initNavigation() {
     const navLinks = document.querySelectorAll('.nav-link');
     const sections = document.querySelectorAll('.content-section');
@@ -27,16 +25,19 @@ function initNavigation() {
     });
 }
 
-// 3. ПОЛУЧЕНИЕ ДАННЫХ (Через твой ключ)
+// ГЛАВНАЯ ФУНКЦИЯ: Обход блокировок через прокси
 async function fetchMarketData() {
     const grid = document.getElementById('cryptoGrid');
     try {
-        // Запрос к CryptoCompare (CORS разрешен для этого API)
-        const response = await fetch(`https://cryptocompare.com{API_KEY}`);
+        const targetUrl = `https://cryptocompare.com{API_KEY}`;
         
-        if (!response.ok) throw new Error('Ошибка сети (Network response was not ok)');
+        // Используем прокси-сервер, который разрешен в РФ и обходит CORS
+        const response = await fetch(`https://allorigins.win{encodeURIComponent(targetUrl)}`);
         
-        const result = await response.json();
+        if (!response.ok) throw new Error('Сервер данных недоступен');
+        
+        const proxyData = await response.json();
+        const result = JSON.parse(proxyData.contents); // Декодируем данные из прокси
 
         if (result.Response === "Error") throw new Error(result.Message);
 
@@ -44,7 +45,7 @@ async function fetchMarketData() {
             id: item.CoinInfo.Name,
             symbol: item.CoinInfo.Name,
             name: item.CoinInfo.FullName,
-            image: `https://www.cryptocompare.com${item.CoinInfo.ImageUrl}`,
+            image: `https://cryptocompare.com${item.CoinInfo.ImageUrl}`,
             price: item.RAW?.USD.PRICE || 0,
             change: item.RAW?.USD.CHANGEPCT24HOUR || 0,
             cap: item.RAW?.USD.MKTCAP || 0
@@ -52,15 +53,14 @@ async function fetchMarketData() {
 
         renderDashboard();
         renderMarketTable();
-        if (allCoins.length > 0) updateChart(allCoins);
+        if (allCoins.length > 0) updateChart(allCoins[0]);
 
     } catch (error) {
-        console.error("Ошибка загрузки:", error);
-        grid.innerHTML = `<div class="loader" style="color: #ef4444;">Ошибка: ${error.message}. Попробуйте обновить через VPN.</div>`;
+        console.error("Ошибка:", error);
+        grid.innerHTML = `<div class="loader" style="color: #ef4444;">Ошибка загрузки. Попробуйте обновить страницу.</div>`;
     }
 }
 
-// 4. ОТРИСОВКА КАРТОЧЕК
 function renderDashboard() {
     const grid = document.getElementById('cryptoGrid');
     if(!grid) return;
@@ -78,7 +78,6 @@ function renderDashboard() {
     `).join('');
 }
 
-// Функции для таблицы, графика и ИИ (укорочено для краткости)
 function renderMarketTable() {
     const tableBody = document.getElementById('marketTableBody');
     if (!tableBody) return;
