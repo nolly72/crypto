@@ -1,121 +1,145 @@
-let allCoins = [];
+// 1. ИНИЦИАЛИЗАЦИЯ
 let myChart = null;
 
 window.addEventListener('DOMContentLoaded', () => {
     if (typeof lucide !== 'undefined') lucide.createIcons();
     initNavigation();
-    fetchMarketData();
+    initClock();
+    fetchWeather();
+    renderQuickQuestions();
 });
 
+// 2. НАВИГАЦИЯ (Все кнопки работают!)
 function initNavigation() {
     const navLinks = document.querySelectorAll('.nav-link');
     const sections = document.querySelectorAll('.content-section');
+
     navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
+        link.onclick = (e) => {
             e.preventDefault();
             const target = link.getAttribute('data-section');
+
             navLinks.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
+
             sections.forEach(s => {
                 s.classList.remove('active');
                 if (s.id === `section-${target}`) s.classList.add('active');
             });
-        });
+            document.getElementById('sidebar').classList.remove('mobile-open');
+        };
     });
+
+    const menuBtn = document.getElementById('menuBtn');
+    if(menuBtn) menuBtn.onclick = () => document.getElementById('sidebar').classList.toggle('mobile-open');
 }
 
-// РАБОЧИЙ МЕТОД: Прямой запрос к Bybit (не блокируется в РФ)
-async function fetchMarketData() {
-    const grid = document.getElementById('cryptoGrid');
+// 3. ЖИВЫЕ ЧАСЫ ДЛЯ ЛК И ШАПКИ
+function initClock() {
+    const timeEl = document.getElementById('liveTime');
+    setInterval(() => {
+        const now = new Date();
+        timeEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }, 1000);
+}
+
+// 4. ПОЛУЧЕНИЕ ПОГОДЫ (Open-Meteo - работает в РФ)
+async function fetchWeather() {
     try {
-        const response = await fetch('https://bybit.com');
-        const result = await response.json();
+        // Запрос для Москвы (можно заменить на авто-геолокацию)
+        const res = await fetch('https://open-meteo.com');
+        const data = await res.json();
         
-        if (result.retCode !== 0) throw new Error('Ошибка биржи');
-
-        // Выбираем популярные пары к USDT
-        const topSymbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'TONUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'DOGEUSDT'];
+        const current = data.current_weather;
+        document.getElementById('currentTemp').innerText = `${Math.round(current.temperature)}°`;
+        document.getElementById('val-humidity').innerText = `${data.hourly.relative_humidity_2m[0]}%`;
+        document.getElementById('val-wind').innerText = `${current.windspeed} км/ч`;
         
-        allCoins = result.result.list
-            .filter(item => topSymbols.includes(item.symbol))
-            .map(item => {
-                const symbol = item.symbol.replace('USDT', '');
-                return {
-                    id: symbol,
-                    symbol: symbol,
-                    name: symbol,
-                    // Иконки берем с надежного гитхаба
-                    image: `https://githubusercontent.com{symbol.toLowerCase()}.png`,
-                    price: parseFloat(item.lastPrice),
-                    change: parseFloat(item.prevPrice24h) ? ((parseFloat(item.lastPrice) - parseFloat(item.prevPrice24h)) / parseFloat(item.prevPrice24h) * 100) : 0,
-                    cap: parseFloat(item.volume24h) // Для объема
-                };
-            });
-
-        renderDashboard();
-        renderMarketTable();
-        if (allCoins.length > 0) updateChart(allCoins[0]);
-
-    } catch (error) {
-        console.error("Ошибка:", error);
-        grid.innerHTML = `<div class="loader" style="color: #ef4444;">Ошибка загрузки данных.</div>`;
+        initChart(data.hourly.temperature_2m.slice(0, 24));
+    } catch (e) {
+        console.error("Ошибка погоды");
     }
 }
 
-function renderDashboard() {
-    const grid = document.getElementById('cryptoGrid');
-    if(!grid) return;
-    grid.innerHTML = allCoins.map(coin => `
-        <div class="coin-card" onclick="selectCoin('${coin.symbol}')">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <img src="${coin.image}" width="40" height="40" onerror="this.src='https://dicebear.com{coin.symbol}'">
-                <span style="color: ${coin.change > 0 ? '#10b981' : '#ef4444'}; font-weight:800;">
-                    ${coin.change > 0 ? '▲' : '▼'} ${Math.abs(coin.change).toFixed(2)}%
-                </span>
-            </div>
-            <p style="color:var(--text-grey); font-size:12px; font-weight:700;">${coin.symbol} / USDT</p>
-            <h3 style="font-size:22px;">$${coin.price.toLocaleString()}</h3>
-        </div>
-    `).join('');
-}
-
-function renderMarketTable() {
-    const tableBody = document.getElementById('marketTableBody');
-    if (!tableBody) return;
-    tableBody.innerHTML = allCoins.map(coin => `
-        <tr>
-            <td style="display:flex; align-items:center; gap:12px; padding: 20px;">
-                <img src="${coin.image}" width="28" onerror="this.src='https://dicebear.com{coin.symbol}'"> 
-                <b>${coin.symbol}</b>
-            </td>
-            <td>$${coin.price.toLocaleString()}</td>
-            <td style="color:${coin.change > 0 ? '#10b981' : '#ef4444'}">${coin.change.toFixed(2)}%</td>
-            <td>$${coin.cap.toLocaleString()}</td>
-        </tr>
-    `).join('');
-}
-
-function selectCoin(symbol) {
-    const coin = allCoins.find(c => c.symbol === symbol);
-    if (coin) {
-        document.getElementById('chartTitle').innerText = `${coin.symbol} Trend`;
-        updateChart(coin);
-    }
-}
-
-function updateChart(coin) {
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    const dataPoints = Array.from({length: 15}, () => coin.price * (0.99 + Math.random() * 0.02));
-    if (myChart) myChart.destroy();
+// 5. ГРАФИК
+function initChart(temps) {
+    const ctx = document.getElementById('weatherChart').getContext('2d');
+    if(myChart) myChart.destroy();
     myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: dataPoints.map((_, i) => i),
+            labels: Array.from({length: 24}, (_, i) => `${i}:00`),
             datasets: [{
-                data: dataPoints, borderColor: '#6366f1', borderWidth: 4, tension: 0.4, fill: true,
-                backgroundColor: 'rgba(99, 102, 241, 0.1)', pointRadius: 0
+                data: temps,
+                borderColor: '#38bdf8',
+                borderWidth: 5,
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(56, 189, 241, 0.1)',
+                pointRadius: 0
             }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { display: false }, y: { grid: { display: false } } }
+        }
     });
 }
+
+// 6. NOLLY AI: 7 ВОПРОСОВ И ОТВЕТОВ
+const aiResponses = {
+    "одежда": "Сегодня идеально подойдет легкая ветровка и джинсы. Не забудь солнечные очки! 😎",
+    "дождь": "Мои датчики показывают 0% вероятности осадков. Зонт можно оставить дома! ☂️",
+    "прогулка": "Конечно! Сейчас лучший индекс свежести воздуха для прогулки в парке. 🌳",
+    "спорт": "Отличное время для пробежки. Ветер умеренный, дышится легко! 🏃",
+    "загар": "УФ-индекс в норме, но после 12:00 лучше использовать защитный крем. ☀️",
+    "завтра": "Завтра будет на 2 градуса теплее. Настоящая весна продолжается! 🌸",
+    "привет": "Привет! Я Nolly. Я знаю всё о циклонах и антициклонах. Чем помочь? ☁️"
+};
+
+function renderQuickQuestions() {
+    const aiWindow = document.getElementById('aiWindow');
+    const qDiv = document.createElement('div');
+    qDiv.className = 'quick-questions';
+    
+    const questions = [
+        {txt: "Что надеть?", key: "одежда"},
+        {txt: "Будет дождь?", key: "дождь"},
+        {txt: "Можно гулять?", key: "прогулка"},
+        {txt: "Как для спорта?", key: "спорт"},
+        {txt: "Можно загорать?", key: "загар"},
+        {txt: "Погода завтра?", key: "завтра"},
+        {txt: "Кто ты?", key: "привет"}
+    ];
+
+    questions.forEach(q => {
+        const btn = document.createElement('button');
+        btn.className = 'q-btn';
+        btn.innerText = q.txt;
+        btn.onclick = () => handleAiInput(q.key);
+        qDiv.appendChild(btn);
+    });
+    aiWindow.insertBefore(qDiv, document.querySelector('.ai-footer'));
+}
+
+function toggleAi() { document.getElementById('aiWindow').classList.toggle('active'); }
+
+function handleAiInput(key) {
+    const box = document.getElementById('aiMessages');
+    const response = aiResponses[key] || "Я пока только учусь понимать этот мир погоды... 🌍";
+    
+    box.innerHTML += `<div class="msg user">${key}</div>`;
+    setTimeout(() => {
+        box.innerHTML += `<div class="msg bot">${response}</div>`;
+        box.scrollTop = box.scrollHeight;
+    }, 600);
+}
+
+document.getElementById('aiSend').onclick = () => {
+    const input = document.getElementById('aiInput');
+    if(input.value) {
+        handleAiInput(input.value.toLowerCase());
+        input.value = '';
+    }
+};

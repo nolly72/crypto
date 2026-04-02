@@ -1,4 +1,4 @@
-/* Основной контейнер приложения */
+/* 1. КАРКАС ПРИЛОЖЕНИЯ */
 .app-container {
     display: flex;
     padding: 20px;
@@ -7,15 +7,15 @@
     position: relative;
 }
 
-/* Боковая панель (Sidebar) */
+/* 2. САЙДБАР (Nature Style) */
 .sidebar {
     width: 280px;
     background: var(--white);
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-sun);
     padding: 40px 20px;
     display: flex;
     flex-direction: column;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-soft);
     transition: var(--transition);
     flex-shrink: 0;
     height: calc(100vh - 40px);
@@ -26,124 +26,127 @@
 .logo {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 22px;
+    gap: 15px;
+    font-size: 24px;
     font-weight: 800;
     margin-bottom: 50px;
-    padding-left: 15px;
-    color: var(--primary);
+    color: var(--leaf); /* Зеленый логотип */
+    padding-left: 10px;
 }
 
 .nav-link {
     display: flex;
     align-items: center;
     gap: 15px;
-    padding: 18px 20px;
+    padding: 18px 25px;
     text-decoration: none;
     color: var(--text-grey);
-    font-weight: 600;
-    border-radius: var(--radius-m);
+    font-weight: 800;
+    border-radius: 24px;
+    margin-bottom: 10px;
     transition: var(--transition);
-    margin-bottom: 8px;
 }
 
 .nav-link.active, .nav-link:hover {
-    background: var(--primary-soft);
-    color: var(--primary);
+    background: var(--bg-nature);
+    color: var(--sky); /* Голубой активный цвет */
 }
 
 .sidebar-footer {
     margin-top: auto;
+    background: #f8fafc;
     padding: 20px;
-    background: var(--bg);
-    border-radius: var(--radius-m);
+    border-radius: 24px;
 }
 
-.ai-badge-status {
+.ai-status {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .pulse-dot {
-    width: 8px; height: 8px; background: #10b981; border-radius: 50%;
-    animation: pulse 2s infinite;
+    width: 10px; height: 10px; background: var(--leaf);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
 }
 
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-}
-
-/* Основной контент */
+/* 3. ШАПКА (Header) */
 .main-content {
     flex: 1;
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 0 auto;
-    width: 100%;
 }
 
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
     gap: 20px;
 }
 
-.search-container {
+.location-chip {
     background: var(--white);
-    flex: 1;
-    padding: 15px 25px;
+    padding: 12px 25px;
     border-radius: 50px;
     display: flex;
     align-items: center;
-    gap: 15px;
-    box-shadow: var(--shadow);
+    gap: 12px;
+    font-weight: 800;
+    box-shadow: var(--shadow-soft);
 }
 
-.search-container input {
-    border: none;
-    outline: none;
-    width: 100%;
-    font-size: 15px;
-    font-weight: 500;
+.location-chip i { color: var(--sky); }
+
+.header-right { display: flex; align-items: center; gap: 20px; }
+
+.time-pill {
+    background: var(--sun);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-weight: 800;
+    font-size: 14px;
 }
 
-.user-block { display: flex; align-items: center; gap: 15px; }
-
-.theme-info {
-    background: var(--primary); color: white; padding: 8px 18px;
-    border-radius: 50px; font-size: 12px; font-weight: 800;
+.user-avatar img {
+    width: 52px; height: 52px;
+    border-radius: 20px;
+    border: 3px solid var(--white);
+    cursor: pointer;
+    box-shadow: var(--shadow-soft);
 }
 
-.avatar img { width: 48px; height: 48px; border-radius: 16px; background: white; }
-
-/* Мобильные настройки */
+/* 4. МОБИЛЬНОСТЬ */
 .menu-btn {
     display: none;
     position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 1100;
+    top: 25px;
+    left: 25px;
+    z-index: 1000;
     background: var(--white);
     border: none;
     padding: 12px;
-    border-radius: 15px;
-    box-shadow: var(--shadow);
-    cursor: pointer;
+    border-radius: 18px;
+    box-shadow: var(--shadow-soft);
+    color: var(--text-dark);
 }
 
 @media (max-width: 1024px) {
-    .sidebar { position: fixed; left: -320px; top: 20px; z-index: 1050; }
+    .sidebar {
+        position: fixed;
+        left: -320px;
+        z-index: 1050;
+    }
     .sidebar.mobile-open { left: 20px; }
     .menu-btn { display: block; }
-    .main-content { padding-top: 60px; }
+    .main-content { padding-top: 70px; }
 }
 
-@media (max-width: 680px) {
-    header { flex-direction: column-reverse; align-items: stretch; }
+@media (max-width: 600px) {
+    header { flex-direction: column-reverse; align-items: flex-start; }
+    .location-chip { width: 100%; }
 }

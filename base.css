@@ -1,72 +1,92 @@
-/* Переменные проекта NOLLY CRYPTO */
+/* 1. ПРИРОДНЫЕ ПЕРЕМЕННЫЕ */
 :root {
-    --bg: #f4f7fe;
+    --bg-nature: linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 100%);
     --white: #ffffff;
-    --primary: #6366f1;
-    --primary-soft: #eef2ff;
-    --accent: #a855f7;
-    --text-main: #1b2559;
-    --text-grey: #a3aed0;
-    --radius-xl: 32px; /* Мягкие скругления */
-    --radius-m: 18px;
-    --shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
+    --sky: #38bdf8;
+    --leaf: #22c55e;
+    --sun: #fbbf24;
+    --text-dark: #0f172a;
+    --text-grey: #64748b;
+    --radius-sun: 40px; /* Очень круглые углы */
+    --glass: rgba(255, 255, 255, 0.7);
+    --shadow-soft: 0 15px 40px rgba(0, 0, 0, 0.05);
     --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Общие стили */
+/* 2. ГЛОБАЛЬНЫЙ СТИЛЬ */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: 'Manrope', sans-serif;
     outline: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    background-color: var(--bg);
-    color: var(--text-main);
+    background: var(--bg-nature);
+    color: var(--text-dark);
+    min-height: 100vh;
     overflow-x: hidden;
-    line-height: 1.6;
+    font-weight: 600; /* Жирный шрифт по умолчанию */
 }
 
-/* Логика переключения разделов */
+/* 3. ЖИРНЫЕ И КРУГЛЫЕ ЗАГОЛОВКИ */
+h1, h2, h3 {
+    font-weight: 800; /* Максимальная жирность */
+    letter-spacing: -0.5px;
+}
+
+/* 4. ЛОГИКА СЕКЦИЙ (Плавный переход) */
 .content-section {
-    display: none; /* Скрыто по умолчанию */
+    display: none;
     opacity: 0;
-    transform: translateY(15px);
+    transform: scale(0.98) translateY(10px);
     transition: var(--transition);
 }
 
 .content-section.active {
-    display: block; /* Показываем активную секцию */
-    animation: sectionFadeIn 0.5s forwards;
+    display: block;
+    animation: natureAppear 0.6s forwards;
 }
 
-@keyframes sectionFadeIn {
+@keyframes natureAppear {
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: scale(1) translateY(0);
     }
 }
 
-/* Скроллбар (тонкий и круглый) */
-::-webkit-scrollbar {
-    width: 6px;
-}
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-::-webkit-scrollbar-thumb {
-    background: var(--text-grey);
-    border-radius: 10px;
+/* 5. ЭФФЕКТ СТЕКЛА ДЛЯ КАРТОЧЕК */
+.glass-card, .coin-card {
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: var(--shadow-soft);
+    border-radius: var(--radius-sun);
+    padding: 25px;
+    transition: var(--transition);
 }
 
-/* Лоадер при загрузке данных */
-.loader {
-    padding: 40px;
-    text-align: center;
-    font-weight: 800;
-    color: var(--primary);
+.glass-card:hover {
+    transform: translateY(-5px);
     background: var(--white);
-    border-radius: var(--radius-m);
+}
+
+/* Кнопки в стиле Nature */
+button {
+    cursor: pointer;
+    border: none;
+    transition: var(--transition);
+    font-weight: 800;
+}
+
+/* Скроллбар */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--sky);
+    border-radius: 20px;
 }
